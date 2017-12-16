@@ -9,58 +9,19 @@ import numpy as np
 
 # In[2]:
 
+# We can load any dataset and pass it in 
+# the function find_unique_first_column:
 dataset = pd.read_csv('C://Users/akilesh/Downloads/weather_nominal.csv')
-c = 0
-ud = []
-p = 1
+PA_B = []
+PB_A = []
 
 
 # In[3]:
 
-dataset
 
-
-# In[4]:
-
-d = {'Sunny': 1, 'Overcast': 2, 'Rainy': 3}
-dataset.Outlook = [d[item] for item in dataset.Outlook.astype(str)]
-
-
-# In[5]:
-
-type(dataset)
-
-
-# In[6]:
-
-#d1 is for sunny weather
-d1 = dataset[dataset['Outlook'] == 1]
-#d2 is for overcast weather
-d2 = dataset[dataset['Outlook'] == 2] 
-#d3 is for rainy weather
-d3 = dataset[dataset['Outlook'] == 3]
-
-
-# In[7]:
-
-d1
-n = d1.columns[0:5]
-n = list(n)
-
-
-# In[8]:
-
-d2
-
-
-# In[9]:
-
-d3
-
-
-# In[13]:
-
-def prob_cal(d):
+# Finding P(A|B):
+# This code is independennt of text or numeric
+def prob_cal(d,P):
     f = 0
     p = [1]*(len(d))
     c = 0
@@ -69,8 +30,9 @@ def prob_cal(d):
     ud = []
     ud = list(ud)
     p = list(p)
-    
-    while k <= 4:
+    n = d.columns[0:len(d.columns)]
+    n = list(n)
+    while k < len(d.columns):
         u = d[n[k]].unique()
         u =list(u)
         lo = d[n[k]]
@@ -87,101 +49,133 @@ def prob_cal(d):
                 else:
                     z = z+1
             ud.append(pr)
-        #Multiplication of the probabilities with respect to the class of the element(as stated in naive bayes theorem) 
+        # Multiplication of the probabilities with respect to the 
+        # class of the element(as stated in naive bayes theorem): 
         [ud*p for ud,p in zip(ud,p)]
         p = ud
         k = k+1
-    print( "The probability of playing golf in this weather is: ", ud[1]*100, "%")
+    print ("The probability of playing golf in this weather is: ",
+          ud[1]*100, "%")
+    P.append(ud[1])
+    return P
+
+
+# In[4]:
+
+
+def find_unique_first_column(d,P):
+    i = 0
+    j = 0
+    col_element = d.iloc[:,0].unique()
+    col_element = list(col_element)
+    col_unique = []
+    while j < len(col_element):
+        while i < len(d):
+            if col_element[j] == d.iloc[i,0]:
+                col_unique.append(d.iloc[i,:])
+                print(col_unique)
+                i = i+1
+            else:
+                i = i+1
+        col_unique = pd.DataFrame(col_unique)
+        prob_cal(col_unique, P)
+        col_unique = []
+        i = 0
+        j = j+1
+        
+# for finding P(B|A)
+def p_b_a(d,P):
+    d1 = d
+    c = d.columns
+    d1[[c[0], c[len(d.columns)-1]]] = d1[[c[len(d.columns)-1], c[0]]]
+    find_unique_first_column(d1, P)
     
     
-             
-            
         
 
 
-# In[14]:
-
-prob_cal(d1)
-prob_cal(d2)
-prob_cal(d3)
+# In[6]:
 
 
-# In[ ]:
+# Calculate P(A)
+def P_a(d):
+    P_a = []
+    count_a = 0
+    i = 0
+    j = 0
+    col_element = d.iloc[:,0].unique()
+    col_element = list(col_element)
+    while j < len(col_element):
+        while i < len(d):
+            if col_element[j] == d.iloc[i,0]:
+                count_a = count_a + 1
+                i = i+1
+            else:
+                i = i+1
+        P_a.append(count_a/len(d))
+        j = j+1
+        i = 0
+    return P_a
+
+# Calculate P(B)
+def P_b(d):
+    P_b = []
+    count_b = 0
+    i = 0
+    j = 0
+    col_element = d.iloc[:,len(d.columns) - 1].unique()
+    col_element = list(col_element)
+    while j < len(col_element):
+        while i < len(d):
+            if col_element[j] == d.iloc[i,len(d.columns)-1]:
+                count_b = count_b + 1
+                i = i+1
+            else:
+                i = i+1
+        P_b.append(count_b/len(d))
+        j = j+1
+        i = 0
+    return P_b
 
 
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[13]:
-
-
-
-
-# In[14]:
-
-
-
-
-# In[ ]:
-
-
+            
+            
+        
+        
+        
+    
 
 
 # In[ ]:
 
 
+def overall_prob(P):
+    i = 0
+    s = 1
+    while i < len(P):
+        P[i] = P[i]*s
+        s = P[i]
+        i = i+1
+    P = []    
+    P = s
+    return P
+        
 
 
 # In[ ]:
 
+set_p = [PA_B, PB_A, P_a(dataset), P_b(dataset)] 
+
+# check accuracy P(A|B)={P(B|A)*P(A)}/{P(B)}
+def find_accuracy(s):
+    Acc = overall_prob(PA_B)/(overall_prob(PB_A)
+      *overall_prob(P_a(dataset))/overall_prob(P_b(dataset)))*100
+    print ('Test Accuracy:' , Acc, '%')
+    return Acc
 
 
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
+find_unique_first_column(dataset, PA_B)
+p_b_a(dataset, PB_A)
+find_accuracy(set_p)
 
 
